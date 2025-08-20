@@ -1,0 +1,387 @@
+<!-- Teacher Modal -->
+<div class="modal fade" id="teacherModal" tabindex="-1" aria-labelledby="teacherModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="teacherModalTitle">เพิ่มข้อมูลครู</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <form id="teacherForm" onsubmit="saveTeacher(event)">
+        <div class="modal-body">
+          <input type="hidden" id="teacherId" name="teacherId">
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="teacherCode" class="form-label">
+                <i class="fas fa-code me-2"></i>รหัสครู
+              </label>
+              <input type="text" class="form-control" id="teacherCode" name="teacherCode" 
+                     placeholder="เช่น T001">
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="teacherPrefix" class="form-label">
+                <i class="fas fa-user me-2"></i>คำนำหน้า <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="teacherPrefix" name="teacherPrefix" required>
+                <option value="">เลือกคำนำหน้า</option>
+                <option value="นาย">นาย</option>
+                <option value="นาง">นาง</option>
+                <option value="นางสาว">นางสาว</option>
+                <option value="ดร.">ดร.</option>
+                <option value="ผศ.ดร.">ผศ.ดร.</option>
+                <option value="รศ.ดร.">รศ.ดร.</option>
+                <option value="ศ.ดร.">ศ.ดร.</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="teacherFirstName" class="form-label">
+                <i class="fas fa-user-edit me-2"></i>ชื่อ <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="teacherFirstName" name="teacherFirstName" 
+                     placeholder="ชื่อ" required>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="teacherLastName" class="form-label">
+                <i class="fas fa-user-edit me-2"></i>นามสกุล <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control" id="teacherLastName" name="teacherLastName" 
+                     placeholder="นามสกุล" required>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="teacherPosition" class="form-label">
+                <i class="fas fa-briefcase me-2"></i>ตำแหน่ง <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="teacherPosition" name="teacherPosition" required>
+                <option value="">เลือกตำแหน่ง</option>
+                <option value="ครูผู้สอน">ครูผู้สอน</option>
+                <option value="หัวหน้าฝ่าย">หัวหน้าฝ่าย</option>
+                <option value="รองผู้อำนวยการ">รองผู้อำนวยการ</option>
+                <option value="ผู้อำนวยการ">ผู้อำนวยการ</option>
+                <option value="ครูพิเศษ">ครูพิเศษ</option>
+                <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+              <label for="teacherSchool" class="form-label">
+                <i class="fas fa-school me-2"></i>โรงเรียน <span class="text-danger">*</span>
+              </label>
+              <select class="form-select" id="teacherSchool" name="teacherSchool" required>
+                <option value="">เลือกโรงเรียน</option>
+                <option value="โรงเรียนบ้านดง">โรงเรียนบ้านดง</option>
+                <option value="โรงเรียนบ้านไผ่">โรงเรียนบ้านไผ่</option>
+                <option value="โรงเรียนบ้านโค้ง">โรงเรียนบ้านโค้ง</option>
+                <option value="โรงเรียนบ้านคลอง">โรงเรียนบ้านคลอง</option>
+                <option value="โรงเรียนบ้านสวน">โรงเรียนบ้านสวน</option>
+                <option value="โรงเรียนบ้านไร่">โรงเรียนบ้านไร่</option>
+                <option value="โรงเรียนบ้านน้อย">โรงเรียนบ้านน้อย</option>
+                <option value="โรงเรียนบ้านใหญ่">โรงเรียนบ้านใหญ่</option>
+                <option value="โรงเรียนวัดใหม่">โรงเรียนวัดใหม่</option>
+                <option value="โรงเรียนวัดเก่า">โรงเรียนวัดเก่า</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>หมายเหตุ:</strong> กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง ฟิลด์ที่มีเครื่องหมาย * เป็นฟิลด์ที่จำเป็นต้องกรอก
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>ยกเลิก
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i>บันทึก
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalTitle">ยืนยันการดำเนินการ</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="text-center">
+          <i class="fas fa-question-circle text-warning" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <p id="confirmMessage">คุณต้องการดำเนินการนี้หรือไม่?</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <i class="fas fa-times me-1"></i>ยกเลิก
+        </button>
+        <button type="button" class="btn btn-primary" id="confirmButton" onclick="executeConfirmAction()">
+          <i class="fas fa-check me-1"></i>ยืนยัน
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body text-center p-4">
+        <div class="loading-spinner mx-auto mb-3"></div>
+        <h6 id="loadingMessage">กำลังโหลด...</h6>
+        <p class="text-muted mb-0">กรุณารอสักครู่</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Additional modal-specific JavaScript functions
+let confirmAction = null;
+
+// Function to show custom loading modal
+function showCustomLoading(message = 'กำลังโหลด...') {
+  document.getElementById('loadingMessage').textContent = message;
+  const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+  loadingModal.show();
+}
+
+// Function to hide custom loading modal
+function hideCustomLoading() {
+  const loadingModal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+  if (loadingModal) {
+    loadingModal.hide();
+  }
+}
+
+// Function to show confirmation modal
+function showConfirmation(title, message, action) {
+  document.getElementById('confirmModalTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  confirmAction = action;
+  
+  const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+  confirmModal.show();
+}
+
+// Execute confirmed action
+function executeConfirmAction() {
+  if (confirmAction && typeof confirmAction === 'function') {
+    confirmAction();
+  }
+  
+  // Hide modal
+  const confirmModal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+  if (confirmModal) {
+    confirmModal.hide();
+  }
+}
+
+// Form validation
+function validateTeacherForm() {
+  const form = document.getElementById('teacherForm');
+  const requiredFields = form.querySelectorAll('[required]');
+  let isValid = true;
+  let firstInvalidField = null;
+  
+  requiredFields.forEach(field => {
+    if (!field.value.trim()) {
+      field.classList.add('is-invalid');
+      if (!firstInvalidField) {
+        firstInvalidField = field;
+      }
+      isValid = false;
+    } else {
+      field.classList.remove('is-invalid');
+    }
+  });
+  
+  if (!isValid && firstInvalidField) {
+    firstInvalidField.focus();
+    firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  
+  return isValid;
+}
+
+// Real-time validation
+document.addEventListener('input', function(event) {
+  if (event.target.hasAttribute('required')) {
+    if (event.target.value.trim()) {
+      event.target.classList.remove('is-invalid');
+    }
+  }
+});
+
+// Clear form when modal is hidden
+document.getElementById('teacherModal').addEventListener('hidden.bs.modal', function() {
+  const form = document.getElementById('teacherForm');
+  form.reset();
+  form.querySelectorAll('.is-invalid').forEach(field => {
+    field.classList.remove('is-invalid');
+  });
+});
+
+// Auto-fill school options based on existing data
+function populateSchoolOptions() {
+  if (dashboardStats && dashboardStats.schoolStats) {
+    const schoolSelect = document.getElementById('teacherSchool');
+    const existingOptions = Array.from(schoolSelect.options).map(option => option.value);
+    
+    Object.keys(dashboardStats.schoolStats).forEach(school => {
+      if (school !== 'ไม่ระบุ' && !existingOptions.includes(school)) {
+        const option = document.createElement('option');
+        option.value = school;
+        option.textContent = school;
+        schoolSelect.appendChild(option);
+      }
+    });
+  }
+}
+
+// Custom input for new school
+function allowCustomSchool() {
+  const schoolSelect = document.getElementById('teacherSchool');
+  
+  // Add "อื่นๆ" option if not exists
+  if (!Array.from(schoolSelect.options).some(option => option.value === 'other')) {
+    const otherOption = document.createElement('option');
+    otherOption.value = 'other';
+    otherOption.textContent = 'อื่นๆ (ระบุเอง)';
+    schoolSelect.appendChild(otherOption);
+  }
+  
+  schoolSelect.addEventListener('change', function() {
+    if (this.value === 'other') {
+      // Create custom input
+      const customInput = document.createElement('input');
+      customInput.type = 'text';
+      customInput.className = 'form-control mt-2';
+      customInput.placeholder = 'ระบุชื่อโรงเรียน';
+      customInput.required = true;
+      customInput.id = 'customSchool';
+      
+      // Insert after select
+      this.parentNode.appendChild(customInput);
+      customInput.focus();
+      
+      // Update hidden value
+      customInput.addEventListener('input', function() {
+        schoolSelect.setAttribute('data-custom-value', this.value);
+      });
+    } else {
+      // Remove custom input if exists
+      const customInput = document.getElementById('customSchool');
+      if (customInput) {
+        customInput.remove();
+      }
+      schoolSelect.removeAttribute('data-custom-value');
+    }
+  });
+}
+
+// Initialize modal enhancements
+document.addEventListener('DOMContentLoaded', function() {
+  allowCustomSchool();
+  
+  // Populate school options when data is loaded
+  if (typeof loadDashboardData === 'function') {
+    const originalLoadDashboardData = loadDashboardData;
+    loadDashboardData = function() {
+      originalLoadDashboardData();
+      setTimeout(populateSchoolOptions, 1000);
+    };
+  }
+});
+
+// Enhanced save teacher function
+function saveTeacherEnhanced(event) {
+  event.preventDefault();
+  
+  if (!validateTeacherForm()) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'ข้อมูลไม่ครบถ้วน',
+      text: 'กรุณากรอกข้อมูลให้ครบถ้วนในฟิลด์ที่จำเป็น',
+      confirmButtonText: 'ตกลง'
+    });
+    return;
+  }
+  
+  const teacherId = document.getElementById('teacherId').value;
+  const schoolSelect = document.getElementById('teacherSchool');
+  let schoolValue = schoolSelect.value;
+  
+  // Handle custom school value
+  if (schoolValue === 'other') {
+    const customSchool = document.getElementById('customSchool');
+    if (customSchool && customSchool.value.trim()) {
+      schoolValue = customSchool.value.trim();
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'ข้อมูลไม่ครบถ้วน',
+        text: 'กรุณาระบุชื่อโรงเรียน',
+        confirmButtonText: 'ตกลง'
+      });
+      return;
+    }
+  }
+  
+  const teacherData = {
+    code: document.getElementById('teacherCode').value.trim(),
+    prefix: document.getElementById('teacherPrefix').value,
+    firstName: document.getElementById('teacherFirstName').value.trim(),
+    lastName: document.getElementById('teacherLastName').value.trim(),
+    position: document.getElementById('teacherPosition').value,
+    school: schoolValue
+  };
+  
+  // Additional validation
+  if (!teacherData.firstName || !teacherData.lastName || !teacherData.prefix || !teacherData.position || !teacherData.school) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'ข้อมูลไม่ครบถ้วน',
+      text: 'กรุณากรอกข้อมูลให้ครบถ้วนในฟิลด์ที่จำเป็น',
+      confirmButtonText: 'ตกลง'
+    });
+    return;
+  }
+  
+  // Call the main save function
+  saveTeacher(event);
+}
+
+// Override the original save function
+if (typeof saveTeacher === 'function') {
+  // Backup original function
+  window.originalSaveTeacher = saveTeacher;
+  // Replace with enhanced version
+  window.saveTeacher = saveTeacherEnhanced;
+}
+</script>

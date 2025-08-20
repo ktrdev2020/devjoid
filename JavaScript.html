@@ -1,0 +1,782 @@
+<script>
+// Global variables
+let teachersData = [];
+let dashboardStats = {};
+let charts = {};
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', function() {
+  loadDashboardData();
+});
+
+// Navigation Functions
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('mainContent');
+  
+  if (window.innerWidth <= 768) {
+    sidebar.classList.toggle('show');
+  } else {
+    sidebar.classList.toggle('collapsed');
+    mainContent.classList.toggle('expanded');
+  }
+}
+
+// Auto-hide sidebar on mobile when clicking menu items
+function hideMenuOnMobile() {
+  if (window.innerWidth <= 768) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.remove('show');
+  }
+}
+
+// Page Navigation Functions
+function showDashboard(event) {
+  event.preventDefault();
+  hideMenuOnMobile();
+  
+  // Update active menu
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  event.target.closest('.nav-link').classList.add('active');
+  
+  // Update page title
+  document.getElementById('pageTitle').textContent = 'แดชบอร์ด';
+  
+  // Show/hide sections
+  document.getElementById('statsCards').style.display = 'flex';
+  document.getElementById('chartsSection').style.display = 'flex';
+  document.getElementById('teachersSection').style.display = 'none';
+  document.getElementById('additionalChartsSection').style.display = 'none';
+  document.getElementById('reportsSection').style.display = 'none';
+  
+  // Refresh charts
+  setTimeout(() => {
+    refreshCharts();
+  }, 100);
+}
+
+function showTeachers(event) {
+  event.preventDefault();
+  hideMenuOnMobile();
+  
+  // Update active menu
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  event.target.closest('.nav-link').classList.add('active');
+  
+  // Update page title
+  document.getElementById('pageTitle').textContent = 'ข้อมูลครู';
+  
+  // Show/hide sections
+  document.getElementById('statsCards').style.display = 'none';
+  document.getElementById('chartsSection').style.display = 'none';
+  document.getElementById('teachersSection').style.display = 'block';
+  document.getElementById('additionalChartsSection').style.display = 'none';
+  document.getElementById('reportsSection').style.display = 'none';
+  
+  // Load teachers data
+  loadTeachersTable();
+}
+
+function showCharts(event) {
+  event.preventDefault();
+  hideMenuOnMobile();
+  
+  // Update active menu
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  event.target.closest('.nav-link').classList.add('active');
+  
+  // Update page title
+  document.getElementById('pageTitle').textContent = 'กราฟและสถิติ';
+  
+  // Show/hide sections
+  document.getElementById('statsCards').style.display = 'none';
+  document.getElementById('chartsSection').style.display = 'none';
+  document.getElementById('teachersSection').style.display = 'none';
+  document.getElementById('additionalChartsSection').style.display = 'flex';
+  document.getElementById('reportsSection').style.display = 'none';
+  
+  // Refresh additional charts
+  setTimeout(() => {
+    createAdditionalCharts();
+  }, 100);
+}
+
+function showReports(event) {
+  event.preventDefault();
+  hideMenuOnMobile();
+  
+  // Update active menu
+  document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+  event.target.closest('.nav-link').classList.add('active');
+  
+  // Update page title
+  document.getElementById('pageTitle').textContent = 'รายงาน';
+  
+  // Show/hide sections
+  document.getElementById('statsCards').style.display = 'none';
+  document.getElementById('chartsSection').style.display = 'none';
+  document.getElementById('teachersSection').style.display = 'none';
+  document.getElementById('additionalChartsSection').style.display = 'none';
+  document.getElementById('reportsSection').style.display = 'block';
+  
+  // Load reports
+  loadReports();
+}
+
+// Data Loading Functions
+function loadDashboardData() {
+  showLoading('กำลังโหลดข้อมูล...');
+  
+  google.script.run
+    .withSuccessHandler(onDashboardDataLoaded)
+    .withFailureHandler(onError)
+    .getDashboardStats();
+}
+
+function onDashboardDataLoaded(stats) {
+  Swal.close();
+  dashboardStats = stats;
+  
+  // Update statistics cards
+  document.getElementById('totalTeachers').textContent = stats.totalTeachers || 0;
+  document.getElementById('totalSchools').textContent = stats.totalSchools || 0;
+  
+  // Calculate specific positions
+  const directors = stats.positionStats['ผู้อำนวยการ'] || 0;
+  const regularTeachers = stats.positionStats['ครูผู้สอน'] || 0;
+  
+  document.getElementById('totalDirectors').textContent = directors;
+  document.getElementById('totalRegularTeachers').textContent = regularTeachers;
+  
+  // Create charts
+  createCharts();
+}
+
+function loadTeachersTable() {
+  showLoading('กำลังโหลดข้อมูลครู...');
+  
+  google.script.run
+    .withSuccessHandler(onTeachersDataLoaded)
+    .withFailureHandler(onError)
+    .getTeachersData();
+}
+
+function onTeachersDataLoaded(data) {
+  Swal.close();
+  teachersData = data;
+  displayTeachers(data);
+}
+
+function displayTeachers(data) {
+  const tbody = document.getElementById('teachersTableBody');
+  
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">ไม่พบข้อมูลครู</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = data.map(teacher => `
+    <tr class="fade-in">
+      <td>${teacher.code || '-'}</td>
+      <td>${teacher.prefix || '-'}</td>
+      <td>${teacher.firstName || '-'}</td>
+      <td>${teacher.lastName || '-'}</td>
+      <td>${teacher.position || '-'}</td>
+      <td>${teacher.school || '-'}</td>
+      <td>
+        <button class="btn btn-success me-1" onclick="editTeacher('${teacher.id}')" title="แก้ไข">
+          <i class="fas fa-edit"></i>
+        </button>
+        <button class="btn btn-danger" onclick="deleteTeacher('${teacher.id}')" title="ลบ">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Chart Functions
+function createCharts() {
+  createPositionChart();
+  createSchoolChart();
+}
+
+function createPositionChart() {
+  const ctx = document.getElementById('positionChart').getContext('2d');
+  
+  // Destroy existing chart if exists
+  if (charts.positionChart) {
+    charts.positionChart.destroy();
+  }
+  
+  const positions = Object.keys(dashboardStats.positionStats || {});
+  const counts = Object.values(dashboardStats.positionStats || {});
+  
+  charts.positionChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: positions,
+      datasets: [{
+        data: counts,
+        backgroundColor: [
+          '#231942',
+          '#5e548e',
+          '#9f86c0',
+          '#be95c4',
+          '#e0b1cb',
+          '#ff6b6b',
+          '#4ecdc4'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function createSchoolChart() {
+  const ctx = document.getElementById('schoolChart').getContext('2d');
+  
+  // Destroy existing chart if exists
+  if (charts.schoolChart) {
+    charts.schoolChart.destroy();
+  }
+  
+  const schools = Object.keys(dashboardStats.schoolStats || {});
+  const counts = Object.values(dashboardStats.schoolStats || {});
+  
+  charts.schoolChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: schools,
+      datasets: [{
+        label: 'จำนวนครู',
+        data: counts,
+        backgroundColor: 'rgba(94, 84, 142, 0.8)',
+        borderColor: '#5e548e',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function createAdditionalCharts() {
+  createTrendChart();
+  createPrefixChart();
+  createPositionBarChart();
+}
+
+function createTrendChart() {
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  
+  if (charts.trendChart) {
+    charts.trendChart.destroy();
+  }
+  
+  // Sample trend data (in real app, this would come from historical data)
+  const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.'];
+  const trendData = [45, 47, 48, 50, 52, dashboardStats.totalTeachers || 0];
+  
+  charts.trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [{
+        label: 'จำนวนครู',
+        data: trendData,
+        borderColor: '#5e548e',
+        backgroundColor: 'rgba(94, 84, 142, 0.1)',
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function createPrefixChart() {
+  const ctx = document.getElementById('prefixChart').getContext('2d');
+  
+  if (charts.prefixChart) {
+    charts.prefixChart.destroy();
+  }
+  
+  const prefixes = Object.keys(dashboardStats.prefixStats || {});
+  const counts = Object.values(dashboardStats.prefixStats || {});
+  
+  charts.prefixChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: prefixes,
+      datasets: [{
+        data: counts,
+        backgroundColor: [
+          '#231942',
+          '#5e548e',
+          '#9f86c0',
+          '#be95c4'
+        ],
+        borderWidth: 3,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function createPositionBarChart() {
+  const ctx = document.getElementById('positionBarChart').getContext('2d');
+  
+  if (charts.positionBarChart) {
+    charts.positionBarChart.destroy();
+  }
+  
+  const positions = Object.keys(dashboardStats.positionStats || {});
+  const counts = Object.values(dashboardStats.positionStats || {});
+  
+  charts.positionBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: positions,
+      datasets: [{
+        label: 'จำนวนคน',
+        data: counts,
+        backgroundColor: [
+          'rgba(35, 25, 66, 0.8)',
+          'rgba(94, 84, 142, 0.8)',
+          'rgba(159, 134, 192, 0.8)',
+          'rgba(190, 149, 196, 0.8)',
+          'rgba(224, 177, 203, 0.8)'
+        ],
+        borderColor: [
+          '#231942',
+          '#5e548e',
+          '#9f86c0',
+          '#be95c4',
+          '#e0b1cb'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              family: 'Kanit'
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function refreshCharts() {
+  if (dashboardStats && Object.keys(dashboardStats).length > 0) {
+    createCharts();
+  }
+}
+
+// Search and Filter Functions
+function filterTeachers() {
+  const searchTerm = document.getElementById('searchInput').value;
+  const filterField = document.getElementById('filterField').value;
+  
+  if (!searchTerm) {
+    displayTeachers(teachersData);
+    return;
+  }
+  
+  showLoading('กำลังค้นหา...');
+  
+  google.script.run
+    .withSuccessHandler(onSearchResults)
+    .withFailureHandler(onError)
+    .searchTeachers(searchTerm, filterField);
+}
+
+function onSearchResults(results) {
+  Swal.close();
+  displayTeachers(results);
+}
+
+function clearFilter() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('filterField').value = 'all';
+  displayTeachers(teachersData);
+}
+
+// CRUD Functions
+function openAddTeacherModal() {
+  // Clear form
+  document.getElementById('teacherForm').reset();
+  document.getElementById('teacherId').value = '';
+  document.getElementById('teacherModalTitle').textContent = 'เพิ่มข้อมูลครู';
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('teacherModal'));
+  modal.show();
+}
+
+function editTeacher(teacherId) {
+  const teacher = teachersData.find(t => t.id == teacherId);
+  if (!teacher) {
+    showError('ไม่พบข้อมูลครูที่ต้องการแก้ไข');
+    return;
+  }
+  
+  // Populate form
+  document.getElementById('teacherId').value = teacher.id;
+  document.getElementById('teacherCode').value = teacher.code || '';
+  document.getElementById('teacherPrefix').value = teacher.prefix || '';
+  document.getElementById('teacherFirstName').value = teacher.firstName || '';
+  document.getElementById('teacherLastName').value = teacher.lastName || '';
+  document.getElementById('teacherPosition').value = teacher.position || '';
+  document.getElementById('teacherSchool').value = teacher.school || '';
+  
+  document.getElementById('teacherModalTitle').textContent = 'แก้ไขข้อมูลครู';
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('teacherModal'));
+  modal.show();
+}
+
+function saveTeacher(event) {
+  event.preventDefault();
+  
+  const teacherId = document.getElementById('teacherId').value;
+  const teacherData = {
+    code: document.getElementById('teacherCode').value,
+    prefix: document.getElementById('teacherPrefix').value,
+    firstName: document.getElementById('teacherFirstName').value,
+    lastName: document.getElementById('teacherLastName').value,
+    position: document.getElementById('teacherPosition').value,
+    school: document.getElementById('teacherSchool').value
+  };
+  
+  // Validate required fields
+  if (!teacherData.firstName || !teacherData.lastName) {
+    showError('กรุณากรอกชื่อและนามสกุล');
+    return;
+  }
+  
+  showLoading(teacherId ? 'กำลังอัพเดทข้อมูล...' : 'กำลังเพิ่มข้อมูล...');
+  
+  if (teacherId) {
+    // Update existing teacher
+    google.script.run
+      .withSuccessHandler(onTeacherSaved)
+      .withFailureHandler(onError)
+      .updateTeacher(teacherId, teacherData);
+  } else {
+    // Add new teacher
+    google.script.run
+      .withSuccessHandler(onTeacherSaved)
+      .withFailureHandler(onError)
+      .addTeacher(teacherData);
+  }
+}
+
+function onTeacherSaved(result) {
+  Swal.close();
+  
+  if (result.success) {
+    showSuccess(result.message);
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('teacherModal'));
+    modal.hide();
+    
+    // Reload data
+    loadTeachersTable();
+    loadDashboardData();
+  } else {
+    showError(result.message);
+  }
+}
+
+function deleteTeacher(teacherId) {
+  Swal.fire({
+    title: 'ยืนยันการลบ',
+    text: 'คุณต้องการลบข้อมูลครูนี้หรือไม่?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'ลบ',
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#dc3545'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      showLoading('กำลังลบข้อมูล...');
+      
+      google.script.run
+        .withSuccessHandler(onTeacherDeleted)
+        .withFailureHandler(onError)
+        .deleteTeacher(teacherId);
+    }
+  });
+}
+
+function onTeacherDeleted(result) {
+  Swal.close();
+  
+  if (result.success) {
+    showSuccess(result.message);
+    
+    // Reload data
+    loadTeachersTable();
+    loadDashboardData();
+  } else {
+    showError(result.message);
+  }
+}
+
+// Reports Functions
+function loadReports() {
+  if (!dashboardStats || Object.keys(dashboardStats).length === 0) {
+    loadDashboardData();
+    return;
+  }
+  
+  // Position summary
+  const positionSummary = document.getElementById('positionSummary');
+  positionSummary.innerHTML = Object.entries(dashboardStats.positionStats || {})
+    .map(([position, count]) => `
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span>${position}</span>
+        <strong>${count} คน</strong>
+      </div>
+    `).join('');
+  
+  // School summary
+  const schoolSummary = document.getElementById('schoolSummary');
+  schoolSummary.innerHTML = Object.entries(dashboardStats.schoolStats || {})
+    .map(([school, count]) => `
+      <div class="d-flex justify-content-between border-bottom py-2">
+        <span>${school}</span>
+        <strong>${count} คน</strong>
+      </div>
+    `).join('');
+}
+
+function exportData() {
+  Swal.fire({
+    title: 'ส่งออกข้อมูล',
+    text: 'การส่งออกข้อมูลจะดำเนินการผ่าน Google Sheets',
+    icon: 'info',
+    confirmButtonText: 'เข้าใจแล้ว'
+  });
+}
+
+// Utility Functions
+function showLoading(message = 'กำลังโหลด...') {
+  Swal.fire({
+    title: message,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    showConfirmButton: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+}
+
+function showSuccess(message) {
+  Swal.fire({
+    icon: 'success',
+    title: 'สำเร็จ',
+    text: message,
+    showConfirmButton: false,
+    timer: 2000
+  });
+}
+
+function showError(message) {
+  Swal.fire({
+    icon: 'error',
+    title: 'เกิดข้อผิดพลาด',
+    text: message,
+    confirmButtonText: 'ตกลง'
+  });
+}
+
+function onError(error) {
+  Swal.close();
+  console.error('Error:', error);
+  showError('เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่อีกครั้ง');
+}
+
+// Logout Function
+function logout() {
+  Swal.fire({
+    title: 'ออกจากระบบ',
+    text: 'คุณต้องการออกจากระบบหรือไม่?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'ออกจากระบบ',
+    cancelButtonText: 'ยกเลิก'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      showLoading('กำลังออกจากระบบ...');
+      
+      google.script.run
+        .withSuccessHandler(onLogoutSuccess)
+        .withFailureHandler(onError)
+        .logoutUser();
+    }
+  });
+}
+
+function onLogoutSuccess(result) {
+  Swal.close();
+  
+  if (result.success) {
+    Swal.fire({
+      icon: 'success',
+      title: 'ออกจากระบบสำเร็จ',
+      text: result.message,
+      showConfirmButton: false,
+      timer: 1500
+    }).then(() => {
+      window.location.href = window.location.href.split('?')[0] + '?page=login';
+    });
+  } else {
+    showError(result.message);
+  }
+}
+
+// Responsive handling
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.remove('show');
+  }
+  
+  // Refresh charts on resize
+  setTimeout(() => {
+    Object.values(charts).forEach(chart => {
+      if (chart && typeof chart.resize === 'function') {
+        chart.resize();
+      }
+    });
+  }, 100);
+});
+
+// Prevent form submission causing page reload
+document.addEventListener('submit', function(event) {
+  event.preventDefault();
+});
+
+// Handle clicks to prevent default behavior
+document.addEventListener('click', function(event) {
+  if (event.target.tagName === 'A' && event.target.getAttribute('href') === '#') {
+    event.preventDefault();
+  }
+});
+</script>

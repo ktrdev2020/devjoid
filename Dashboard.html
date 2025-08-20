@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แดชบอร์ด - รายงานข้อมูล</title>
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts - Kanit -->
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <?!= include('CSS'); ?>
+</head>
+<body class="dashboard-container">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="https://person.ssk3.go.th/wp-content/uploads/2023/12/%E0%B8%95%E0%B8%A3%E0%B8%B2%E0%B9%80%E0%B8%82%E0%B8%95-3-removebg-preview.png" 
+           alt="Logo" class="sidebar-logo">
+      <div class="sidebar-title">รายงานข้อมูล</div>
+      <div class="sidebar-subtitle">สพป.ศรีสะเกษ เขต 3</div>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-link active" onclick="showDashboard(event)">
+        <i class="fas fa-tachometer-alt"></i>
+        <span>แดชบอร์ด</span>
+      </a>
+      <a href="#" class="nav-link" onclick="showTeachers(event)">
+        <i class="fas fa-users"></i>
+        <span>ข้อมูลครู</span>
+      </a>
+      <a href="#" class="nav-link" onclick="showCharts(event)">
+        <i class="fas fa-chart-pie"></i>
+        <span>กราฟและสถิติ</span>
+      </a>
+      <a href="#" class="nav-link" onclick="showReports(event)">
+        <i class="fas fa-file-alt"></i>
+        <span>รายงาน</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+      <div class="d-flex align-items-center">
+        <button class="nav-toggle" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h4 class="ms-3 mb-0 text-gradient" id="pageTitle">แดชบอร์ด</h4>
+      </div>
+      
+      <div class="user-info">
+        <span class="text-muted">ยินดีต้อนรับ</span>
+        <button class="btn btn-logout" onclick="logout()">
+          <i class="fas fa-sign-out-alt me-1"></i>ออกจากระบบ
+        </button>
+      </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-content" id="dashboardContent">
+      <!-- Statistics Cards -->
+      <div class="row mb-4" id="statsCards">
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="stats-card position-relative">
+            <div class="stats-card-header">
+              <i class="fas fa-users"></i>
+              <span>จำนวนครูทั้งหมด</span>
+            </div>
+            <div class="stats-number" id="totalTeachers">0</div>
+            <div class="stats-label">คน</div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="stats-card position-relative">
+            <div class="stats-card-header">
+              <i class="fas fa-school"></i>
+              <span>จำนวนโรงเรียน</span>
+            </div>
+            <div class="stats-number" id="totalSchools">0</div>
+            <div class="stats-label">แห่ง</div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="stats-card position-relative">
+            <div class="stats-card-header">
+              <i class="fas fa-user-tie"></i>
+              <span>ผู้อำนวยการ</span>
+            </div>
+            <div class="stats-number" id="totalDirectors">0</div>
+            <div class="stats-label">คน</div>
+          </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+          <div class="stats-card position-relative">
+            <div class="stats-card-header">
+              <i class="fas fa-chalkboard-teacher"></i>
+              <span>ครูผู้สอน</span>
+            </div>
+            <div class="stats-number" id="totalRegularTeachers">0</div>
+            <div class="stats-label">คน</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="row" id="chartsSection">
+        <div class="col-lg-6 mb-4">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h5 class="mb-0">สัดส่วนตำแหน่งงาน</h5>
+            </div>
+            <canvas id="positionChart" height="300"></canvas>
+          </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h5 class="mb-0">จำนวนครูแต่ละโรงเรียน</h5>
+            </div>
+            <canvas id="schoolChart" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teachers Table Section -->
+      <div class="table-container" id="teachersSection" style="display: none;">
+        <div class="table-header">
+          <h5 class="mb-0">ข้อมูลครู</h5>
+          <button class="btn btn-primary" onclick="openAddTeacherModal()">
+            <i class="fas fa-plus me-1"></i>เพิ่มครู
+          </button>
+        </div>
+        
+        <!-- Search and Filter -->
+        <div class="search-filter-container">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <input type="text" class="form-control search-input" id="searchInput" 
+                     placeholder="ค้นหาครู..." onkeyup="filterTeachers()">
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="filterField" onchange="filterTeachers()">
+                <option value="all">ค้นหาทุกฟิลด์</option>
+                <option value="firstName">ชื่อ</option>
+                <option value="lastName">นามสกุล</option>
+                <option value="position">ตำแหน่ง</option>
+                <option value="school">โรงเรียน</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-secondary w-100" onclick="clearFilter()">
+                <i class="fas fa-times me-1"></i>ล้างการค้นหา
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>รหัสครู</th>
+                <th>คำนำหน้า</th>
+                <th>ชื่อ</th>
+                <th>นามสกุล</th>
+                <th>ตำแหน่ง</th>
+                <th>โรงเรียน</th>
+                <th>การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="teachersTableBody">
+              <!-- Teachers data will be loaded here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Additional Charts Section -->
+      <div class="row" id="additionalChartsSection" style="display: none;">
+        <div class="col-lg-12 mb-4">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h5 class="mb-0">กราฟเส้นแสดงแนวโน้มจำนวนครู</h5>
+            </div>
+            <canvas id="trendChart" height="200"></canvas>
+          </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h5 class="mb-0">สัดส่วนคำนำหน้า</h5>
+            </div>
+            <canvas id="prefixChart" height="300"></canvas>
+          </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h5 class="mb-0">กราฟแท่งตำแหน่งงาน</h5>
+            </div>
+            <canvas id="positionBarChart" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reports Section -->
+      <div class="table-container" id="reportsSection" style="display: none;">
+        <div class="table-header">
+          <h5 class="mb-0">รายงานและสถิติ</h5>
+          <button class="btn btn-primary" onclick="exportData()">
+            <i class="fas fa-download me-1"></i>ส่งออกข้อมูล
+          </button>
+        </div>
+        
+        <div class="row">
+          <div class="col-md-6">
+            <h6>สรุปข้อมูลตามตำแหน่ง</h6>
+            <div id="positionSummary" class="mb-4"></div>
+          </div>
+          
+          <div class="col-md-6">
+            <h6>สรุปข้อมูลตามโรงเรียน</h6>
+            <div id="schoolSummary" class="mb-4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div>2025 © รายงานข้อมูล</div>
+      <div class="d-flex align-items-center">
+        <span class="footer-text me-2">ผู้พัฒนาโดย: สพป.ศรีสะเกษ เขต 3</span>
+        <img src="https://person.ssk3.go.th/wp-content/uploads/2023/12/%E0%B8%95%E0%B8%A3%E0%B8%B2%E0%B9%80%E0%B8%82%E0%B8%95-3-removebg-preview.png" 
+             alt="Developer Logo" class="footer-logo">
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Modal -->
+  <?!= include('ModalTeacher'); ?>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <?!= include('JavaScript'); ?>
+</body>
+</html>
