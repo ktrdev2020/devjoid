@@ -304,33 +304,114 @@ function searchTeachers(searchTerm, filterField) {
 }
 
 /**
- * Test function to create sample data
+ * Initialize sample data for both users and teachers sheets
  */
-function createSampleData() {
+function initializeSampleData() {
   try {
-    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(TEACHERS_SHEET);
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
     
-    // Clear existing data
-    sheet.clear();
+    // Initialize Users Sheet
+    let usersSheet = spreadsheet.getSheetByName(USERS_SHEET);
+    if (!usersSheet) {
+      usersSheet = spreadsheet.insertSheet(USERS_SHEET);
+    }
     
-    // Add headers
-    const headers = ['id', 'code', 'prefix', 'firstName', 'lastName', 'position', 'school'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    // Clear and setup users data
+    usersSheet.clear();
+    const userHeaders = ['id', 'user', 'password'];
+    usersSheet.getRange(1, 1, 1, userHeaders.length).setValues([userHeaders]);
     
-    // Add sample data
-    const sampleData = [
+    const usersData = [
+      [1, 'admin', 'admin123'],
+      [2, 'teacher1', 'pass123'],
+      [3, 'teacher2', 'pass456'],
+      [4, 'director', 'dir123']
+    ];
+    
+    usersSheet.getRange(2, 1, usersData.length, userHeaders.length).setValues(usersData);
+    
+    // Initialize Teachers Sheet
+    let teachersSheet = spreadsheet.getSheetByName(TEACHERS_SHEET);
+    if (!teachersSheet) {
+      teachersSheet = spreadsheet.insertSheet(TEACHERS_SHEET);
+    }
+    
+    // Clear and setup teachers data
+    teachersSheet.clear();
+    const teacherHeaders = ['id', 'code', 'prefix', 'firstName', 'lastName', 'position', 'school'];
+    teachersSheet.getRange(1, 1, 1, teacherHeaders.length).setValues([teacherHeaders]);
+    
+    const teachersData = [
       [1, 'T001', 'นาย', 'สมชาย', 'ใจดี', 'ครูผู้สอน', 'โรงเรียนบ้านดง'],
       [2, 'T002', 'นาง', 'สมศรี', 'ใสใจ', 'หัวหน้าฝ่าย', 'โรงเรียนบ้านไผ่'],
       [3, 'T003', 'นางสาว', 'สุภา', 'ดีใจ', 'ครูผู้สอน', 'โรงเรียนบ้านดง'],
       [4, 'T004', 'นาย', 'สมปอง', 'มีใจ', 'ผู้อำนวยการ', 'โรงเรียนบ้านไผ่'],
-      [5, 'T005', 'นาง', 'สมหญิง', 'เมตตา', 'รองผู้อำนวยการ', 'โรงเรียนบ้านไผ่']
+      [5, 'T005', 'นาง', 'สมหญิง', 'เมตตา', 'รองผู้อำนวยการ', 'โรงเรียนบ้านไผ่'],
+      [6, 'T006', 'นาย', 'สมศักดิ์', 'ดีงาม', 'ครูผู้สอน', 'โรงเรียนบ้านโค้ง'],
+      [7, 'T007', 'นาง', 'สมรัก', 'รักดี', 'ครูผู้สอน', 'โรงเรียนบ้านคลอง'],
+      [8, 'T008', 'นางสาว', 'สมใจ', 'ใจงาม', 'ครูชำนาญการ', 'โรงเรียนบ้านสวน'],
+      [9, 'T009', 'นาย', 'สมหมาย', 'หมายดี', 'รองผู้อำนวยการ', 'โรงเรียนบ้านไร่'],
+      [10, 'T010', 'นาง', 'สมจิต', 'จิตดี', 'ผู้อำนวยการ', 'โรงเรียนบ้านน้อย'],
+      [11, 'T011', 'นาย', 'สมควร', 'ควรดี', 'ครูผู้สอน', 'โรงเรียนบ้านใหญ่'],
+      [12, 'T012', 'นางสาว', 'สมนึก', 'นึกดี', 'ครูผู้สอน', 'โรงเรียนวัดใหม่'],
+      [13, 'T013', 'นาง', 'สมปรารถนา', 'ปรารถนาดี', 'หัวหน้าฝ่าย', 'โรงเรียนวัดเก่า'],
+      [14, 'T014', 'นาย', 'สมคิด', 'คิดดี', 'ครูชำนาญการพิเศษ', 'โรงเรียนบ้านดง'],
+      [15, 'T015', 'นาง', 'สมหวัง', 'หวังดี', 'ครูเชี่ยวชาญ', 'โรงเรียนบ้านไผ่']
     ];
     
-    sheet.getRange(2, 1, sampleData.length, headers.length).setValues(sampleData);
+    teachersSheet.getRange(2, 1, teachersData.length, teacherHeaders.length).setValues(teachersData);
     
-    return { success: true, message: 'สร้างข้อมูลตัวอย่างสำเร็จ' };
+    return { success: true, message: 'สร้างข้อมูลตัวอย่างทั้งหมดสำเร็จ' };
   } catch (error) {
-    Logger.log('Create sample data error: ' + error.toString());
-    return { success: false, message: 'เกิดข้อผิดพลาดในการสร้างข้อมูลตัวอย่าง' };
+    Logger.log('Initialize sample data error: ' + error.toString());
+    return { success: false, message: 'เกิดข้อผิดพลาดในการสร้างข้อมูลตัวอย่าง: ' + error.toString() };
+  }
+}
+
+/**
+ * Test function to create sample teachers data only
+ */
+function createSampleData() {
+  return initializeSampleData();
+}
+
+/**
+ * Function to check and repair sheet structure
+ */
+function checkSheetStructure() {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const result = {
+      spreadsheetExists: true,
+      usersSheet: false,
+      teachersSheet: false,
+      usersStructure: false,
+      teachersStructure: false
+    };
+    
+    // Check users sheet
+    const usersSheet = spreadsheet.getSheetByName(USERS_SHEET);
+    if (usersSheet) {
+      result.usersSheet = true;
+      const usersHeaders = usersSheet.getRange(1, 1, 1, 3).getValues()[0];
+      if (usersHeaders[0] === 'id' && usersHeaders[1] === 'user' && usersHeaders[2] === 'password') {
+        result.usersStructure = true;
+      }
+    }
+    
+    // Check teachers sheet
+    const teachersSheet = spreadsheet.getSheetByName(TEACHERS_SHEET);
+    if (teachersSheet) {
+      result.teachersSheet = true;
+      const teachersHeaders = teachersSheet.getRange(1, 1, 1, 7).getValues()[0];
+      if (teachersHeaders[0] === 'id' && teachersHeaders[6] === 'school') {
+        result.teachersStructure = true;
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    Logger.log('Check sheet structure error: ' + error.toString());
+    return { spreadsheetExists: false, error: error.toString() };
   }
 }

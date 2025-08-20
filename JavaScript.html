@@ -773,10 +773,109 @@ document.addEventListener('submit', function(event) {
   event.preventDefault();
 });
 
-// Handle clicks to prevent default behavior
+// Handle clicks to prevent default behavior and white screen issues
 document.addEventListener('click', function(event) {
   if (event.target.tagName === 'A' && event.target.getAttribute('href') === '#') {
     event.preventDefault();
   }
 });
+
+// Global error handler to prevent white screen
+window.addEventListener('error', function(event) {
+  console.error('Global error caught:', event.error);
+  
+  // Show user-friendly error message
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      icon: 'error',
+      title: 'เกิดข้อผิดพลาด',
+      text: 'เกิดข้อผิดพลาดในระบบ กรุณารีเฟรชหน้าเว็บ',
+      confirmButtonText: 'รีเฟรช',
+      allowOutsideClick: false
+    }).then(() => {
+      window.location.reload();
+    });
+  }
+  
+  return true; // Prevent default browser error handling
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Unhandled promise rejection:', event.reason);
+  
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      icon: 'warning',
+      title: 'เกิดข้อผิดพลาดในการโหลดข้อมูล',
+      text: 'กรุณาลองใหม่อีกครั้ง',
+      confirmButtonText: 'ตกลง'
+    });
+  }
+  
+  event.preventDefault(); // Prevent console error
+});
+
+// Initialize error boundary for Google Apps Script
+if (typeof google !== 'undefined' && google.script) {
+  // Override run methods to add error handling
+  const originalRun = google.script.run;
+  
+  google.script.run = new Proxy(originalRun, {
+    get: function(target, prop) {
+      if (typeof target[prop] === 'function') {
+        return function(...args) {
+          try {
+            return target[prop].apply(target, args);
+          } catch (error) {
+            console.error('Google Script Run Error:', error);
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
+                confirmButtonText: 'ตกลง'
+              });
+            }
+            throw error;
+          }
+        };
+      }
+      return target[prop];
+    }
+  });
+}
+
+// Add performance monitoring
+if (typeof performance !== 'undefined') {
+  window.addEventListener('load', function() {
+    const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart;
+    console.log('Page load time:', loadTime + 'ms');
+    
+    // Log slow loading
+    if (loadTime > 5000) {
+      console.warn('Slow page load detected:', loadTime + 'ms');
+    }
+  });
+}
+
+// Add network status monitoring
+if (typeof navigator !== 'undefined' && 'onLine' in navigator) {
+  function updateOnlineStatus() {
+    if (!navigator.onLine) {
+      if (typeof Swal !== 'undefined') {
+        Swal.fire({
+          icon: 'warning',
+          title: 'ไม่มีการเชื่อมต่ออินเทอร์เน็ต',
+          text: 'กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
+          confirmButtonText: 'ตกลง',
+          allowOutsideClick: false
+        });
+      }
+    }
+  }
+  
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+}
 </script>
